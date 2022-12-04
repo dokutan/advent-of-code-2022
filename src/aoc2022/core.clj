@@ -1,7 +1,7 @@
 (ns aoc2022.core
   (:gen-class))
 
-(require '[aoc2022.day03 :as day03])
+(require '[aoc2022.day04 :as day04])
 
 (defn -main
   "I don't do a whole lot ... yet."
