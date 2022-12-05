@@ -22,11 +22,11 @@
                  (map #(string/split % #","))
                  ;(map #(map (fn [r] (string/split r #"-")) %) )
                  (map #(map parse-section %)))
-      pairs-contained (map #(if (apply superset-or-subset? %) 1 0) pairs)
+      pairs-contained (filter #(apply superset-or-subset? %) pairs)
       pairs-overlap (map #(if (zero? (count (apply set/intersection %))) 0 1) pairs)]
 
   ;; part 1: 526
-  (println (reduce + pairs-contained))
+  (println (count pairs-contained))
 
   ;; part2: 886
   (println (reduce + pairs-overlap)))
