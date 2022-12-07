@@ -1,9 +1,7 @@
 (ns aoc2022.day07
   (:require
    [clojure.java.io :as io]
-   [clojure.string :as string]
-   [instaparse.core :as insta]
-   [zprint.core :as zp]))
+   [instaparse.core :as insta]))
 
 (def fsecond (comp first second))
 (def ssecond (comp second second))
@@ -61,7 +59,7 @@
         [file-tree dirs]
         (recur commands cwd file-tree (conj dirs cwd))))))
 
-(defn dir-sizes [file-tree dirs]
+(defn calc-dir-sizes [file-tree dirs]
   (loop [dirs dirs dir-sizes {} file-tree file-tree]
     (let [dir (first dirs)
           dirs (rest dirs)
@@ -110,7 +108,16 @@
 
       [file-tree dirs] (commands->file-tree+dirs commands)
       dirs (distinct (sort #(> (count %1) (count %2)) dirs))
-      dir-sizes (dir-sizes file-tree dirs)]
+      dir-sizes (calc-dir-sizes file-tree dirs)
+
+      required-space (- 30000000 (- 70000000 (get dir-sizes ["/"])))]
 
   ;; part 1: 1232307
-  (println (reduce + (filter #(<= % 100000) (vals dir-sizes)))))
+  (println (reduce + (filter #(<= % 100000) (vals dir-sizes))))
+
+  ;; part 2: 7268994
+  (println (->> dir-sizes
+                (vals)
+                (filter #(>= % required-space))
+                (sort)
+                (first))))
