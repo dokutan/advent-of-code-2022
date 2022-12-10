@@ -1,7 +1,7 @@
 (ns aoc2022.core
   (:gen-class))
 
-(use 'aoc2022.day09)
+(use 'aoc2022.day10)
 
 (defn -main
   "I don't do a whole lot ... yet."
