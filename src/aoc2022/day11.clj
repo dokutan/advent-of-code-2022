@@ -28,7 +28,48 @@
 
     {:items items
      :operation operation
-     :throw-to throw-to}))
+     :throw-to throw-to
+     :test-number (Integer/parseInt divisible-by)}))
+
+(defn throw-items [monkeys rounds item-fn]
+  (loop [monkeys monkeys
+         current-monkey 0
+         round 0
+         inspections {}]
+
+    (if (= round rounds)
+      inspections
+
+      (if-not (zero? (count (:items (nth monkeys current-monkey))))
+        ;; inspect one item
+        (let [;; get item from current monkey
+              monkey (nth monkeys current-monkey)
+              items (:items monkey)
+              monkey (assoc monkey :items (vec (rest items)))
+              monkeys (assoc monkeys current-monkey monkey)
+              item (first items)
+              item ((:operation monkey) item)
+              item (item-fn item)
+
+              ;; throw item
+              throw-to ((:throw-to monkey) item)
+              monkey (nth monkeys throw-to)
+              items (conj (:items monkey) item)
+              monkey (assoc monkey :items items)
+              monkeys (assoc monkeys throw-to monkey)
+
+              inspections (assoc
+                           inspections
+                           current-monkey
+                           (inc (get inspections current-monkey 0)))]
+
+          (recur monkeys current-monkey round inspections))
+
+        ;; next monkey
+        (let [current-monkey (inc current-monkey)
+              current-monkey (mod current-monkey (count monkeys))
+              round (if (zero? current-monkey) (inc round) round)]
+          (recur monkeys current-monkey round inspections))))))
 
 (println "day 11")
 (let [monkeys (as-> "day11" v
@@ -37,46 +78,15 @@
                 (string/split v #"\n\n")
                 (mapv parse-monkey v))
 
-      inspections
-      (loop [monkeys monkeys
-             current-monkey 0
-             round 0
-             inspections {}]
-
-        (if (= round 20)
-          ;(map #(:items %) monkeys)
-          inspections
-
-          (if-not (zero? (count (:items (nth monkeys current-monkey))))
-            ;; inspect one item
-            (let [;; get item from current monkey
-                  monkey (nth monkeys current-monkey)
-                  items (:items monkey)
-                  monkey (assoc monkey :items (vec (rest items)))
-                  monkeys (assoc monkeys current-monkey monkey)
-                  item (first items)
-                  item ((:operation monkey) item)
-                  item (/ (- item (mod item 3)) 3)
-
-                  ;; throw item
-                  throw-to ((:throw-to monkey) item)
-                  monkey (nth monkeys throw-to)
-                  items (conj (:items monkey) item)
-                  monkey (assoc monkey :items items)
-                  monkeys (assoc monkeys throw-to monkey)
-
-                  inspections (assoc
-                               inspections
-                               current-monkey
-                               (inc (get inspections current-monkey 0)))]
-
-              (recur monkeys current-monkey round inspections))
-
-            ;; next monkey
-            (let [current-monkey (inc current-monkey)
-                  current-monkey (mod current-monkey (count monkeys))
-                  round (if (zero? current-monkey) (inc round) round)]
-              (recur monkeys current-monkey round inspections)))))]
+      inspections-1 (throw-items monkeys 20 #(/ (- % (mod % 3)) 3))
+      inspections-2 (throw-items
+                     monkeys
+                     10000
+                     (fn [item]
+                       (mod item (reduce * (map #(:test-number %) monkeys)))))]
 
   ;; part1: 55930
-  (println (apply * (take 2 (sort > (vals inspections))))))
+  (println (apply * (take 2 (sort > (vals inspections-1)))))
+  
+  ;; part2: 14636993466
+  (println (apply * (take 2 (sort > (vals inspections-2))))))
