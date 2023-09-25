@@ -1,5 +1,4 @@
 (ns aoc2022.day06
-  (:require [clojure.string :as string])
   (:require [clojure.java.io :as io]))
 
 (defn first-distinct-n [n]
