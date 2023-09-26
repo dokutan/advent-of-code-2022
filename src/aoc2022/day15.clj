@@ -16,39 +16,34 @@
    (abs (- (first p) (first q)))
    (abs (- (second p) (second q)))))
 
+(defn blocked-range-on-y
+  "Calculate the range of x that is blocked by a sensor and `distance`.
+   Returns [x-min x-max] or []."
+  [y sensor-x sensor-y distance]
+  (let [y-distance (abs (- sensor-y y))
+        x-distance (- distance y-distance)]
+    (if (> y-distance distance)
+      []
+      [(- sensor-x x-distance) (+ sensor-x x-distance)])))
+
 (defn part1
   "Solve part 1."
   [sensors-beacons]
-  (let [row
-        (loop [row {} sensors-beacons sensors-beacons]
-          (let [s-b
-                (first sensors-beacons)
+  (let [blocked-ranges
+        (map
+         (fn [s-b]
+           (blocked-range-on-y
+            2000000
+            (first s-b)
+            (second s-b)
+            (manhattan-distance
+             [(first s-b) (second s-b)]
+             [(get s-b 2) (get s-b 3)])))
+         sensors-beacons)]
 
-                distance ; between sensor and beacon
-                (manhattan-distance
-                 [(first s-b) (second s-b)]
-                 [(get s-b 2) (get s-b 3)])
-
-                row
-                (reduce
-                 merge
-                 row
-                 (for [x (range (- (first s-b) distance) (+ (first s-b) distance)) y [2000000]]
-                   (if (<= (manhattan-distance [(first s-b) (second s-b)] [x y]) distance)
-                     {[x y] :blocked}
-                     {})))]
-
-            (if (= 1 (count sensors-beacons))
-              row
-              (recur row (rest sensors-beacons)))))
-
-        row ;add sensors and beacons
-        (reduce merge
-                row
-                (map (fn [[sx sy bx by]] {[sx sy] :sensor [bx by] :beacon})
-                     sensors-beacons))]
-
-    (count (filter (fn [k] (and (= 2000000 (second (first k))) (= :blocked (second k)))) row))))
+    ;; total length blocked
+    (+ (abs (apply min (flatten blocked-ranges)))
+       (apply max (flatten blocked-ranges)))))
 
 (println "day 15")
 (let [sensors-beacons ; [[sensor-x sensor-y beacon-x beacon-y] ...]
@@ -59,4 +54,4 @@
            (mapv parse-line))]
 
   ;; part 1: 6275922
-  (print (part1 sensors-beacons)))
+  (println (part1 sensors-beacons)))
