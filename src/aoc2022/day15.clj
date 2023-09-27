@@ -45,6 +45,66 @@
     (+ (abs (apply min (flatten blocked-ranges)))
        (apply max (flatten blocked-ranges)))))
 
+(defn part2
+  "Solve part2."
+  [sensors-beacons]
+
+  (let [boundaries ; of the scanned areas
+        (map
+         (fn [s-b]
+           (let [x (first s-b)
+                 y (second s-b)
+                 radius
+                 (manhattan-distance
+                  [x y]
+                  [(get s-b 2) (get s-b 3)])]
+             [(+ (- y x) radius 1)
+              (- (- y x radius) 1)
+              (+ x y radius 1)
+              (- (+ x y) radius 1)]))
+         sensors-beacons)
+
+        boundaries+ ; with gradient +1
+        (flatten
+         (map
+          (fn [[a b _ _]] [a b])
+          boundaries))
+
+        boundaries- ; with gradient -1
+        (flatten
+         (map
+          (fn [[_ _ a b]] [a b])
+          boundaries))
+
+        intersections
+        (for [b+ boundaries+ b- boundaries-]
+          ; (b-a)/2 , (a+b)/2
+          [(/ (- b- b+) 2)
+           (/ (+ b+ b-) 2)])
+
+        intersections ; that are not blocked
+        (for [[ix iy] intersections]
+          (let [not-blocked?
+                (reduce
+                 (fn [a b] (and a b))
+                 (for [[sx sy bx by] sensors-beacons]
+                   (let [radius (manhattan-distance [sx sy] [bx by])
+                         distance (manhattan-distance [sx sy] [ix iy])]
+                     (>= distance radius))))]
+            (if (and
+                 not-blocked?
+                 (>= ix 0)
+                 (>= iy 0)
+                 (<= ix 4000000)
+                 (<= iy 4000000))
+              [ix iy]
+              nil)))
+
+        beacon
+        (first (filter identity intersections))]
+
+    (+ (* 4000000 (first beacon)) (second beacon))))
+
 (println "day 15")
 (let [sensors-beacons ; [[sensor-x sensor-y beacon-x beacon-y] ...]
       (->> "day15"
@@ -54,4 +114,7 @@
            (mapv parse-line))]
 
   ;; part 1: 6275922
-  (println (part1 sensors-beacons)))
+  (println (part1 sensors-beacons))
+
+  ;; part 2: 11747175442119
+  (println (part2 sensors-beacons)))
